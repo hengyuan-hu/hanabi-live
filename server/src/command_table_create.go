@@ -70,7 +70,7 @@ func commandTableCreate(s *Session, d *CommandData) {
 
 	// Make a default game name if they did not provide one
 	if len(d.Name) == 0 {
-		d.Name = s.Username() + "'s game"
+		d.Name = s.Username() + "-s game"
 	}
 
 	// Check for non-ASCII characters

@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 )
@@ -52,6 +53,7 @@ func httpLocalhostInit() {
 	httpRouter.GET("/uptime", httpLocalhostUptime)
 	httpRouter.GET("/version", httpLocalhostVersion)
 	httpRouter.GET("/unmaintenance", httpLocalhostUnmaintenance)
+	httpRouter.GET("/createRoom", httpLocalhostCreateRoom)
 
 	// We need to create a new http.Server because the default one has no timeouts
 	// https://blog.cloudflare.com/the-complete-guide-to-golang-net-http-timeouts/
@@ -66,6 +68,29 @@ func httpLocalhostInit() {
 		return
 	}
 	logger.Fatal("ListenAndServe ended prematurely (for localhost).")
+}
+
+func httpLocalhostCreateRoom(c *gin.Context) {
+	fmt.Println("this function is called")
+	tableData := make([]CommandData, 0)
+	// TODO: need to check whether a session is playing a game, see commandTableCreate
+	// TODO: think about matching strategy
+	// TODO: make sure that when human paired with bot, human create the room
+	fmt.Println(len(sessions), "sessions")
+	var i int = 0
+	for _, s := range sessions {
+		if i % 2 == 0 {
+			fmt.Println(i, "th player online, create table")
+			var cmdData CommandData
+			cmdData.Variant = "No Variant"
+			commandTableCreate(s, &cmdData)
+			tableData = append(tableData, cmdData)
+		} else {
+			fmt.Println(i, "th player online, join table")
+			commandTableJoin(s, &(tableData[len(tableData)-1]))
+		}
+		i += 1
+	}
 }
 
 func httpLocalhostUserAction(c *gin.Context) {
