@@ -70,27 +70,166 @@ func httpLocalhostInit() {
 	logger.Fatal("ListenAndServe ended prematurely (for localhost).")
 }
 
+var hasPlayedBot = make(map[string]bool)
+var hasPlayedWith = make(map[string]map[string]bool)
+
 func httpLocalhostCreateRoom(c *gin.Context) {
 	fmt.Println("this function is called")
-	tableData := make([]CommandData, 0)
 	// TODO: need to check whether a session is playing a game, see commandTableCreate
 	// TODO: think about matching strategy
 	// TODO: make sure that when human paired with bot, human create the room
 	fmt.Println(len(sessions), "sessions")
-	var i int = 0
+
+	var bot *Session = nil
+
+	var numAvailHuman int = 0
+	// get all available human players
 	for _, s := range sessions {
-		if i % 2 == 0 {
-			fmt.Println(i, "th player online, create table")
+		if strings.HasPrefix(s.Username(), "Bot-") {
+			if bot != nil {
+				fmt.Println("Warning: More than 1 bot, ignore ", s.Username())
+			} else {
+				bot = s
+			}
+			continue
+		}
+		if _, ok := hasPlayedBot[s.Username()]; !ok {
+			hasPlayedBot[s.Username()] = false
+			hasPlayedWith[s.Username()] = make(map[string]bool)
+		}
+		if t := s.GetJoinedTable(); t != nil {
+			continue
+		}
+		numAvailHuman += 1
+	}
+
+	if bot == nil {
+		panic("Error: Cannot find bot")
+	}
+
+	var numBotGame int = numAvailHuman / 3
+	if (numAvailHuman - numBotGame) % 2 == 1 {
+		numBotGame += 1
+	}
+
+	humanTables : make(map[string]CommandData)
+	// tableCreators : make([]*Session, 0)
+
+	errorSessions : make([]*Session, 0)
+	for _, s := range sessions {
+		if strings.HasPrefix(s.Username(), "Bot-") {
+			continue
+		}
+		if t := s.GetJoinedTable(); t != nil {
+			continue
+		}
+
+		playedBot, okBot := hasPlayedBot[s.Username()]
+		if !okBot {
+			fmt.Println("Warning: cannot find ", s.Username(), " in playedBot")
+			errorSessions = append(errorSessions, s)
+		}
+
+		var playBot := false
+		if playedBot {
+			fmt.Println("Log: ", s.Username(), " has played with bot")
+		} else {
+			fmt.Println("Log: ", s.Username(), " has not played with bot")
+			if numBotGame > 0 {
+				fmt.Println("Log: ", s.Username(), " wil play bot this time")
+				playBot = true
+				numBotGame -= 1
+			} else {
+				fmt.Println("Log: ", s.Username(), " wil not play bot this time")
+				playBot = true
+			}
+		}
+
+		// this guy will play with bot
+		if playBot {
 			var cmdData CommandData
 			cmdData.Variant = "No Variant"
 			commandTableCreate(s, &cmdData)
-			tableData = append(tableData, cmdData)
-		} else {
-			fmt.Println(i, "th player online, join table")
-			commandTableJoin(s, &(tableData[len(tableData)-1]))
+			commandTableJoin(bot, &cmdData)
+			continue
 		}
-		i += 1
+
+		playedWith, okPlay := hasPlayedWith[s.Username()]
+		if !okPlay {
+			fmt.Println("Warning: cannot find ", s.Username(), " in playedWith")
+			errorSessions = append(errorSessions, s)
+			continue
+		}
+
+		// this guy may join an existing table
+		if len(humanTables) > 0 {
+			var tableJoined := false
+			var tableCreator string
+			for creator, cmdData := range(humanTables) {
+				tableID := d.TableID
+				table, ok := tables[tableID]
+				if !ok {
+					panic("Table " + strconv.Itoa(tableID) + " does not exist.")
+				}
+				if len(table.Players) != 1 {
+					panic("Table " + strconv.Itoa(tableID) + " has ",
+						len(table.Players), " players")
+				}
+
+				// this guy has played with the table creator
+				if _, played := playedWith[creator]; played {
+					if !hasPlayedWith[creator][s.Username()] {
+						panic("Error: Cannot find bot")
+					}
+					continue
+				}
+
+				// try to join the table
+				commandTableJoin(s, &cmdData)
+				if len(table.Players) == 2 {
+					tableJoined := true
+					tableCreator = creator
+					hasPlayedWith[s.Username()][creator] = true
+					hasPlayedWith[creator][s.Username()] = true
+					break
+				}
+			}
+			if tableJoined {
+				fmt.Println(s.Username(), " joins ", tableCreator)
+				delete(humanTables, tableCreator)
+				continue
+			}
+		}
+
+		// this guy will create a new table
+		fmt.Println(s.Username(), " creates a new table")
+		var cmdData CommandData
+		cmdData.Variant = "No Variant"
+		commandTableCreate(s, &cmdData)
+		humanTables[s.Username()] = cmdData
 	}
+
+	fmt.Println("Log: #ErrorSession: ", len(errorSessions))
+	fmt.Println("Log: #RemainingTable: ", len(humanTables))
+
+
+
+
+	// var i int = 0
+	// tableData := make([]CommandData, 0)
+	// for _, s := range sessions {
+	//	if i % 2 == 0 {
+	//		fmt.Println(i, "th player online, create table")
+	//		var cmdData CommandData
+	//		cmdData.Variant = "No Variant"
+	//		commandTableCreate(s, &cmdData)
+	//		tableData = append(tableData, cmdData)
+	//	} else {
+	//		fmt.Println(i, "th player online, join table")
+	//		commandTableJoin(s, &(tableData[len(tableData)-1]))
+	//	}
+	//	i += 1
+	// }
 }
 
 func httpLocalhostUserAction(c *gin.Context) {
