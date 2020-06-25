@@ -112,11 +112,12 @@ func httpLocalhostCreateRoom(c *gin.Context) {
 		numBotGame += 1
 	}
 
-	humanTables : make(map[string]CommandData)
+	humanTables := make(map[string]CommandData)
 	// tableCreators : make([]*Session, 0)
 
-	errorSessions : make([]*Session, 0)
+	errorSessions := make([]*Session, 0)
 	for _, s := range sessions {
+		fmt.Println("===========================================")
 		if strings.HasPrefix(s.Username(), "Bot-") {
 			continue
 		}
@@ -130,27 +131,27 @@ func httpLocalhostCreateRoom(c *gin.Context) {
 			errorSessions = append(errorSessions, s)
 		}
 
-		var playBot := false
+		var playBot = false
 		if playedBot {
 			fmt.Println("Log: ", s.Username(), " has played with bot")
 		} else {
 			fmt.Println("Log: ", s.Username(), " has not played with bot")
 			if numBotGame > 0 {
-				fmt.Println("Log: ", s.Username(), " wil play bot this time")
+				fmt.Println("Log: ", s.Username(), " will play bot this time")
 				playBot = true
 				numBotGame -= 1
 			} else {
-				fmt.Println("Log: ", s.Username(), " wil not play bot this time")
-				playBot = true
+				fmt.Println("Log: ", s.Username(), " will not play bot this time")
 			}
 		}
 
 		// this guy will play with bot
 		if playBot {
 			var cmdData CommandData
-			cmdData.Variant = "No Variant"
+			// cmdData.Variant = "No Variant"
 			commandTableCreate(s, &cmdData)
 			commandTableJoin(bot, &cmdData)
+			hasPlayedBot[s.Username()] = true
 			continue
 		}
 
@@ -163,17 +164,17 @@ func httpLocalhostCreateRoom(c *gin.Context) {
 
 		// this guy may join an existing table
 		if len(humanTables) > 0 {
-			var tableJoined := false
+			var tableJoined = false
 			var tableCreator string
 			for creator, cmdData := range(humanTables) {
-				tableID := d.TableID
+				tableID := cmdData.TableID
 				table, ok := tables[tableID]
 				if !ok {
 					panic("Table " + strconv.Itoa(tableID) + " does not exist.")
 				}
 				if len(table.Players) != 1 {
-					panic("Table " + strconv.Itoa(tableID) + " has ",
-						len(table.Players), " players")
+					panic("Table " + strconv.Itoa(tableID) + " has " +
+						strconv.Itoa(len(table.Players)) + " players")
 				}
 
 				// this guy has played with the table creator
@@ -187,7 +188,7 @@ func httpLocalhostCreateRoom(c *gin.Context) {
 				// try to join the table
 				commandTableJoin(s, &cmdData)
 				if len(table.Players) == 2 {
-					tableJoined := true
+					tableJoined = true
 					tableCreator = creator
 					hasPlayedWith[s.Username()][creator] = true
 					hasPlayedWith[creator][s.Username()] = true
@@ -195,26 +196,40 @@ func httpLocalhostCreateRoom(c *gin.Context) {
 				}
 			}
 			if tableJoined {
-				fmt.Println(s.Username(), " joins ", tableCreator)
+				fmt.Println("Log: ", s.Username(), " joins ", tableCreator)
 				delete(humanTables, tableCreator)
 				continue
 			}
 		}
 
 		// this guy will create a new table
-		fmt.Println(s.Username(), " creates a new table")
+		fmt.Println("Log: ", s.Username(), " creates a new table")
 		var cmdData CommandData
-		cmdData.Variant = "No Variant"
+		// cmdData.Variant = "No Variant"
 		commandTableCreate(s, &cmdData)
 		humanTables[s.Username()] = cmdData
+		fmt.Println("===========================================")
 	}
 
 	fmt.Println("Log: #ErrorSession: ", len(errorSessions))
 	fmt.Println("Log: #RemainingTable: ", len(humanTables))
 
+	// remaining tables
+	for creator, cmdData := range(humanTables) {
+		tableID := cmdData.TableID
+		table, ok := tables[tableID]
+		if !ok {
+			panic("Table " + strconv.Itoa(tableID) + " does not exist.")
+		}
+		if len(table.Players) != 1 {
+			panic("Table " + strconv.Itoa(tableID) + " has " +
+						strconv.Itoa(len(table.Players)) + " players")
+		}
 
-
-
+		// add a bot player
+		commandTableJoin(bot, &cmdData)
+		hasPlayedBot[creator] = true		
+	}
 	// var i int = 0
 	// tableData := make([]CommandData, 0)
 	// for _, s := range sessions {
