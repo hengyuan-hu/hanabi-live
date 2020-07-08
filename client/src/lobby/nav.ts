@@ -5,28 +5,28 @@ import { FADE_TIME } from '../constants';
 import globals from '../globals';
 import * as misc from '../misc';
 import * as modals from '../modals';
-import * as createGame from './createGame';
+// import * as createGame from './createGame';
 import * as history from './history';
 import * as pregame from './pregame';
-import * as watchReplay from './watchReplay';
+// import * as watchReplay from './watchReplay';
 
 export const init = () => {
   // Initialize all of the navigation tooltips using Tooltipster
   initTooltips();
 
-  // The "Create Game" button
-  $('#nav-buttons-games-create-game').tooltipster('option', 'functionBefore', createGame.before);
-  $('#nav-buttons-games-create-game').tooltipster('option', 'functionReady', createGame.ready);
-  // (the logic for this tooltip is handled in the "createGame.ts" file)
+  // // The "Create Game" button
+  // $('#nav-buttons-games-create-game').tooltipster('option', 'functionBefore', createGame.before);
+  // $('#nav-buttons-games-create-game').tooltipster('option', 'functionReady', createGame.ready);
+  // // (the logic for this tooltip is handled in the "createGame.ts" file)
 
-  // The "Show History" button
-  $('#nav-buttons-games-history').on('click', () => {
-    history.show();
-  });
+  // // The "Show History" button
+  // $('#nav-buttons-games-history').on('click', () => {
+  //   history.show();
+  // });
 
-  // The "Watch Specific Replay" button
-  $('#nav-buttons-games-replay').tooltipster('option', 'functionReady', watchReplay.ready);
-  // (the logic for this tooltip is handled in the "watchReplay.ts" file)
+  // // The "Watch Specific Replay" button
+  // $('#nav-buttons-games-replay').tooltipster('option', 'functionReady', watchReplay.ready);
+  // // (the logic for this tooltip is handled in the "watchReplay.ts" file)
 
   // The "Help" button
   // (this is just a simple link)
@@ -89,8 +89,8 @@ const initTooltips = () => {
   const tooltips = [
     'create-game',
     'replay',
-    'resources',
-    'settings',
+    // 'resources',
+    // 'settings',
   ];
 
   const tooltipsterOptions = {

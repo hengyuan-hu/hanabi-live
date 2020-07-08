@@ -92,7 +92,7 @@ export default () => {
   drawDeck();
   drawScoreArea();
   drawSpectators();
-  drawSharedReplay();
+  // drawSharedReplay();
   drawYourTurn();
 
   // The middle column
@@ -453,7 +453,7 @@ const drawBottomLeftButtons = () => {
       y: bottomLeftButtonValues.y * winH,
       width: bottomLeftButtonValues.w! * winW,
       height: bottomLeftButtonValues.h! * winH,
-      visible: !globals.replay,
+      visible: false, // !globals.replay,
     },
     [
       globals.ImageLoader!.get('replay')!,
@@ -527,7 +527,7 @@ const drawBottomLeftButtons = () => {
     width: bottomLeftButtonValues.w! * winW,
     height: bottomLeftButtonValues.h! * winH,
     text: '💬',
-    visible: !globals.replay || globals.sharedReplay,
+    visible: false, // !globals.replay || globals.sharedReplay,
   });
   globals.layers.UI.add(chatButton as any);
   chatButton.on('click tap', () => {
@@ -551,9 +551,9 @@ const drawBottomLeftButtons = () => {
   const lobbyButtonSmall = new Button({
     x: lobbyButtonValues.x * winW,
     y: lobbyButtonValues.y * winH,
-    width: ((bottomLeftButtonValues.w! / 2) - shortButtonSpacing) * winW,
+    width: ((bottomLeftButtonValues.w! * 0.5) - shortButtonSpacing) * winW,
     height: lobbyButtonValues.h! * winH,
-    visible: !globals.replay && !globals.spectating,
+    visible: false, // !globals.replay && !globals.spectating,
   }, [globals.ImageLoader!.get('home')!]);
   globals.layers.UI.add(lobbyButtonSmall as any);
   lobbyButtonSmall.on('click tap', lobbyButtonClick);
@@ -579,9 +579,9 @@ const drawBottomLeftButtons = () => {
 
   // The kill button (which terminates the current game)
   const killButton = new Button({
-    x: (bottomLeftButtonValues.x + (bottomLeftButtonValues.w! / 2) + shortButtonSpacing) * winW,
+    x: (bottomLeftButtonValues.x + (bottomLeftButtonValues.w! * 0.5) + shortButtonSpacing) * winW,
     y: (bottomLeftButtonValues.y + (2 * bottomLeftButtonValues.h!) + 0.02) * winH,
-    width: ((bottomLeftButtonValues.w! / 2) - shortButtonSpacing) * winW,
+    width: ((bottomLeftButtonValues.w! * 0.5) - shortButtonSpacing) * winW,
     height: bottomLeftButtonValues.h! * winH,
     visible: !globals.replay && !globals.spectating,
   }, [globals.ImageLoader!.get('skull')!]);
@@ -988,116 +988,116 @@ const drawSpectators = () => {
   globals.layers.UI.add(globals.elements.spectatorsNumLabel);
 };
 
-// The "crown" symbol to show that we are in a shared replay
-const drawSharedReplay = () => {
-  const sharedReplayLeaderLabelValues = {
-    x: spectatorsLabelValues.x,
-    y: spectatorsLabelValues.y - 0.06,
-  };
+// // The "crown" symbol to show that we are in a shared replay
+// const drawSharedReplay = () => {
+//   const sharedReplayLeaderLabelValues = {
+//     x: spectatorsLabelValues.x,
+//     y: spectatorsLabelValues.y - 0.06,
+//   };
 
-  // A circle around the crown indicates that we are the current replay leader
-  // (we want the icon to be on top of this so that it does not interfere with mouse events)
-  globals.elements.sharedReplayLeaderCircle = new Konva.Circle({
-    x: (sharedReplayLeaderLabelValues.x + 0.015) * winW,
-    y: (sharedReplayLeaderLabelValues.y + 0.015) * winH,
-    radius: 0.028 * winH,
-    stroke: '#ffe03b', // Yellow
-    strokeWidth: 2,
-    visible: false,
-  });
-  globals.layers.UI.add(globals.elements.sharedReplayLeaderCircle);
+//   // A circle around the crown indicates that we are the current replay leader
+//   // (we want the icon to be on top of this so that it does not interfere with mouse events)
+//   globals.elements.sharedReplayLeaderCircle = new Konva.Circle({
+//     x: (sharedReplayLeaderLabelValues.x + 0.015) * winW,
+//     y: (sharedReplayLeaderLabelValues.y + 0.015) * winH,
+//     radius: 0.028 * winH,
+//     stroke: '#ffe03b', // Yellow
+//     strokeWidth: 2,
+//     visible: false,
+//   });
+//   globals.layers.UI.add(globals.elements.sharedReplayLeaderCircle);
 
-  // The crown
-  const size = 0.025 * winW;
-  const sharedReplayLeaderLabel = new ImageWithTooltip({
-    x: (sharedReplayLeaderLabelValues.x + 0.0025) * winW,
-    y: (sharedReplayLeaderLabelValues.y - 0.007) * winH,
-    width: size,
-    height: size,
-    image: globals.ImageLoader!.get('crown')!,
-    shadowColor: 'black',
-    shadowBlur: 10,
-    shadowOffset: {
-      x: 0,
-      y: 0,
-    },
-    shadowOpacity: 0.9,
-    visible: false,
-    listening: true,
-  });
-  globals.layers.UI.add(sharedReplayLeaderLabel);
-  globals.elements.sharedReplayLeaderLabel = sharedReplayLeaderLabel;
+//   // The crown
+//   const size = 0.025 * winW;
+//   const sharedReplayLeaderLabel = new ImageWithTooltip({
+//     x: (sharedReplayLeaderLabelValues.x + 0.0025) * winW,
+//     y: (sharedReplayLeaderLabelValues.y - 0.007) * winH,
+//     width: size,
+//     height: size,
+//     image: globals.ImageLoader!.get('crown')!,
+//     shadowColor: 'black',
+//     shadowBlur: 10,
+//     shadowOffset: {
+//       x: 0,
+//       y: 0,
+//     },
+//     shadowOpacity: 0.9,
+//     visible: false,
+//     listening: true,
+//   });
+//   globals.layers.UI.add(sharedReplayLeaderLabel);
+//   globals.elements.sharedReplayLeaderLabel = sharedReplayLeaderLabel;
 
-  // Add an animation to alert everyone when shared replay leadership has been transfered
-  globals.elements.sharedReplayLeaderLabelPulse = new Konva.Tween({
-    node: sharedReplayLeaderLabel,
-    width: size * 2,
-    height: size * 2,
-    offsetX: 0.025 * winH,
-    offsetY: 0.025 * winH,
-    duration: 0.5,
-    easing: Konva.Easings.EaseInOut,
-    onFinish: () => {
-      if (globals.elements.sharedReplayLeaderLabelPulse) {
-        globals.elements.sharedReplayLeaderLabelPulse.reverse();
-      }
-    },
-  });
-  globals.elements.sharedReplayLeaderLabelPulse.anim.addLayer(globals.layers.UI);
+//   // Add an animation to alert everyone when shared replay leadership has been transfered
+//   globals.elements.sharedReplayLeaderLabelPulse = new Konva.Tween({
+//     node: sharedReplayLeaderLabel,
+//     width: size * 2,
+//     height: size * 2,
+//     offsetX: 0.025 * winH,
+//     offsetY: 0.025 * winH,
+//     duration: 0.5,
+//     easing: Konva.Easings.EaseInOut,
+//     onFinish: () => {
+//       if (globals.elements.sharedReplayLeaderLabelPulse) {
+//         globals.elements.sharedReplayLeaderLabelPulse.reverse();
+//       }
+//     },
+//   });
+//   globals.elements.sharedReplayLeaderLabelPulse.anim.addLayer(globals.layers.UI);
 
-  // Tooltip for the crown
-  sharedReplayLeaderLabel.tooltipName = 'leader';
-  // This will get filled in later by the "replayLeader" command
-  sharedReplayLeaderLabel.tooltipContent = '';
-  tooltips.init(sharedReplayLeaderLabel, false, true);
+//   // Tooltip for the crown
+//   sharedReplayLeaderLabel.tooltipName = 'leader';
+//   // This will get filled in later by the "replayLeader" command
+//   sharedReplayLeaderLabel.tooltipContent = '';
+//   tooltips.init(sharedReplayLeaderLabel, false, true);
 
-  // The user can right-click on the crown to pass the replay leader to an arbitrary person
-  sharedReplayLeaderLabel.on('click', (event) => {
-    // Do nothing if this is not a right-click
-    if (event.evt.which !== 3) {
-      return;
-    }
+//   // The user can right-click on the crown to pass the replay leader to an arbitrary person
+//   sharedReplayLeaderLabel.on('click', (event) => {
+//     // Do nothing if this is not a right-click
+//     if (event.evt.which !== 3) {
+//       return;
+//     }
 
-    // Do nothing if we are not the shared replay leader
-    if (!globals.amSharedReplayLeader) {
-      return;
-    }
+//     // Do nothing if we are not the shared replay leader
+//     if (!globals.amSharedReplayLeader) {
+//       return;
+//     }
 
-    const spectatorMap: Map<number, string> = new Map();
+//     const spectatorMap: Map<number, string> = new Map();
 
-    let msg = 'What is the number of the person that you want to pass the replay leader to?\n\n';
-    let i = 1;
-    for (const spectator of globals.spectators) {
-      if (spectator === globals.lobby.username) {
-        continue;
-      }
+//     let msg = 'What is the number of the person that you want to pass the replay leader to?\n\n';
+//     let i = 1;
+//     for (const spectator of globals.spectators) {
+//       if (spectator === globals.lobby.username) {
+//         continue;
+//       }
 
-      spectatorMap.set(i, spectator);
-      msg += `${i} - ${spectator}\n`;
-      i += 1;
-    }
-    const targetString = window.prompt(msg);
-    if (targetString === null) {
-      // Don't do anything if they pressed the cancel button
-      return;
-    }
-    const target = parseInt(targetString, 10);
-    if (Number.isNaN(target)) {
-      // Don't do anything if they entered something that is not a number
-      return;
-    }
-    const selectedSpectator = spectatorMap.get(target);
-    if (typeof selectedSpectator === 'undefined') {
-      // Don't do anything if they entered an invalid spectator number
-      return;
-    }
+//       spectatorMap.set(i, spectator);
+//       msg += `${i} - ${spectator}\n`;
+//       i += 1;
+//     }
+//     const targetString = window.prompt(msg);
+//     if (targetString === null) {
+//       // Don't do anything if they pressed the cancel button
+//       return;
+//     }
+//     const target = parseInt(targetString, 10);
+//     if (Number.isNaN(target)) {
+//       // Don't do anything if they entered something that is not a number
+//       return;
+//     }
+//     const selectedSpectator = spectatorMap.get(target);
+//     if (typeof selectedSpectator === 'undefined') {
+//       // Don't do anything if they entered an invalid spectator number
+//       return;
+//     }
 
-    globals.lobby.conn!.send('tableSetLeader', {
-      tableID: globals.lobby.tableID,
-      name: selectedSpectator,
-    });
-  });
-};
+//     globals.lobby.conn!.send('tableSetLeader', {
+//       tableID: globals.lobby.tableID,
+//       name: selectedSpectator,
+//     });
+//   });
+// };
 
 // A notification that shows it is your turn
 const drawYourTurn = () => {
@@ -1478,7 +1478,7 @@ const drawClueArea = () => {
 
   // If this is a two player game, we can slide the clue UI down by a bit
   // (since the clue target buttons won't be shown)
-  const playerButtonAdjustment = numPlayers === 2 ? playerButtonH / 2 : 0;
+  const playerButtonAdjustment = numPlayers === 2 ? playerButtonH * 0.5 : 0;
 
   // This is the normal button group, which does not include us
   globals.elements.clueTargetButtonGroup = new ButtonGroup({});
@@ -1713,7 +1713,7 @@ const drawCurrentPlayerArea = () => {
   // The "Current player: [player name]" box
   const currentPlayerAreaWidth = 0.3; // This is big enough to fit in between the two timers
   const currentPlayerAreaValues = {
-    x: clueAreaValues.x + (clueAreaValues.w! / 2) - (currentPlayerAreaWidth / 2),
+    x: clueAreaValues.x + (clueAreaValues.w! * 0.5) - (currentPlayerAreaWidth * 0.5),
     y: clueAreaValues.y + 0.015,
     w: currentPlayerAreaWidth,
     h: 0.15,
@@ -1729,7 +1729,7 @@ const drawCurrentPlayerArea = () => {
 const drawPreplayArea = () => {
   const w = 0.29;
   const h = 0.1;
-  const x = clueAreaValues.x + (clueAreaValues.w! / 2) - (w / 2);
+  const x = clueAreaValues.x + (clueAreaValues.w! * 0.5) - (w * 0.5);
   const y = clueAreaValues.y + 0.05; // "clueAreaValues.h" does not exist
   globals.elements.premoveCancelButton = new Button({
     x: x * winW,
@@ -1945,8 +1945,8 @@ const drawPauseArea = () => {
 const drawExtraAnimations = () => {
   // These images are shown to the player to
   // indicate which direction we are moving in a shared replay
-  const x = (playAreaValues.x + (playAreaValues.w! / 2) - 0.05);
-  const y = (playAreaValues.y + (playAreaValues.h! / 2) - 0.05);
+  const x = (playAreaValues.x + (playAreaValues.w! * 0.5) - 0.05);
+  const y = (playAreaValues.y + (playAreaValues.h! * 0.5) - 0.05);
   const size = 0.1;
 
   globals.elements.sharedReplayForward = new Konva.Image({

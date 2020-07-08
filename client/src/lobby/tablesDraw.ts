@@ -12,12 +12,13 @@ const tablesDraw = () => {
   // Clear all of the existing rows
   tbody.html('');
 
-  if (globals.tableMap.size === 0) {
+  if (globals.tableMap.size >= 0) {
     $('#lobby-games-no').show();
     $('#lobby-games').addClass('align-center-v');
     $('#lobby-games-table-container').hide();
     return;
   }
+
   $('#lobby-games-no').hide();
   $('#lobby-games').removeClass('align-center-v');
   $('#lobby-games-table-container').show();

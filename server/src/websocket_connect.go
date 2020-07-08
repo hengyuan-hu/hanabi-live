@@ -201,21 +201,21 @@ func websocketConnect(ms *melody.Session) {
 	}
 	s.Emit("tableList", tableMessageList)
 
-	// Send the past 50 chat messages from the lobby
-	if !chatSendPastFromDatabase(s, "lobby", 50) {
-		return
-	}
+	// // Send the past 50 chat messages from the lobby
+	// if !chatSendPastFromDatabase(s, "lobby", 50) {
+	// 	return
+	// }
 
-	// Send them a message about the Discord server
-	msg := "Find teammates and discuss strategy in the " +
-		"<a href=\"https://discord.gg/FADvkJp\" target=\"_blank\" rel=\"noopener noreferrer\">" +
-		"Hanabi Discord chat</a>."
-	s.Emit("chat", &ChatMessage{
-		Msg:      msg,
-		Server:   true,
-		Datetime: time.Now(),
-		Room:     "lobby",
-	})
+	// // Send them a message about the Discord server
+	// msg := "Find teammates and discuss strategy in the " +
+	// 	"<a href=\"https://discord.gg/FADvkJp\" target=\"_blank\" rel=\"noopener noreferrer\">" +
+	// 	"Hanabi Discord chat</a>."
+	// s.Emit("chat", &ChatMessage{
+	// 	Msg:      msg,
+	// 	Server:   true,
+	// 	Datetime: time.Now(),
+	// 	Room:     "lobby",
+	// })
 
 	// Send them the message of the day, if any
 	motdPath := path.Join(projectPath, "motd.txt")

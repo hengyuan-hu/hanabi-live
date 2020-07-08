@@ -9,47 +9,11 @@
       <!-- We use <i> instead of the icon class because it results in a more compact button -->
       <ul id="nav-buttons-games" class="hidden">
         <li>
-          <a id="nav-buttons-games-create-game" class="button tooltip" data-tooltip-content="#create-game-tooltip">
-            <i class="fas fa-plus nav-icon"></i>
-            <span class="nav-hotkey-indicator">C</span>reate Game
-          </a>
-        </li>
-        <li>
-          <a id="nav-buttons-games-history" class="button">
-            <i class="fas fa-history nav-icon"></i>
-            Show <span class="nav-hotkey-indicator">H</span>istory
-          </a>
-        </li>
-        <li>
-          <a id="nav-buttons-games-replay" class="button tooltip" data-tooltip-content="#replay-tooltip">
-            <i class="fas fa-eye nav-icon"></i>
-            W<span class="nav-hotkey-indicator">a</span>tch Specific Replay
-          </a>
-        </li>
-        <li>
-          <a id="nav-buttons-games-stats" class="button" href="/stats" target="_blank" rel="noopener noreferrer">
-            <i class="fas fa-chart-area nav-icon"></i>
-            Stats
-          </a>
-        </li>
-        <li>
           <a id="nav-buttons-games-help" class="button"
             href="https://github.com/Zamiell/hanabi-live/blob/master/docs/FEATURES.md" target="_blank"
             rel="noopener noreferrer">
             <i class="fas fa-question-circle question-mark nav-icon"></i>
             Help
-          </a>
-        </li>
-        <li>
-          <a id="nav-buttons-games-resources" class="button tooltip" data-tooltip-content="#resources-tooltip">
-            <i class="fas fa-link nav-icon"></i>
-            Resources
-          </a>
-        </li>
-        <li>
-          <a id="nav-buttons-games-settings" class="button tooltip" data-tooltip-content="#settings-tooltip">
-            <i class="fas fa-cog nav-icon"></i>
-            Settings
           </a>
         </li>
         <li>
@@ -143,11 +107,9 @@
           </section>
 
           <section id="sign-in" class="box align-center hidden">
-            <h3>Sign In / Create Account</h3>
+            <h3>Sign In</h3>
             <p>
-              To create a new account, simply login with a new username and select a password.<br />
-              Do <strong>NOT</strong> reuse any of your
-              <a href="https://github.com/Zamiell/hanabi-live/blob/master/docs/PASSWORDS.md" target="_blank" rel="noopener noreferrer">previous passwords</a>!
+              Please use the username & password sent through email to login.
             </p>
             <form id="login-form">
               <div class="row">
@@ -183,7 +145,6 @@
               <div class="row">
                 <div class="col-12">
                   <p id="login-alert" class="hidden"></p>
-                  <p style="margin-bottom: 0;"><a href="/password-reset">Forgot password?</a></p>
                 </div>
               </div>
             </form>
@@ -205,28 +166,8 @@
       <div class="row">
         <div class="col-8 off-2">
           <p class="login-text">
-            Hanabi Live is fan-made and has no affiliation to Antoine Bauza or any of the real-life
-            publishers of the game. This website is free of charge, has no advertisements, and is
-            not monetized in any way. If you enjoy playing the game online, then we urge you to
-            purchase a physical copy of the game, as there is no official online version.
+          sapce for legal related text ...
           </p>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-8 off-2">
-          <p class="login-text">
-            Discord is a voice and text chat application that you can run in a browser.<br />
-            If the server is down, you can probably find out why in the Hanabi server / chat room.
-          </p>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-12 align-center">
-          <a href="https://discord.gg/FADvkJp">
-            <img id="title-discord" src="/public/img/discord.png" />
-          </a>
         </div>
       </div>
     </section>
@@ -500,7 +441,7 @@
       <div class="col-12">
         <!-- The "games" table (all current games) -->
         <section id="lobby-games" class="box align-center-v">
-          <h3 id="lobby-games-no">No current games.</h3>
+          <h3 id="lobby-games-no" style="text-align:center">Please wait. Matching happens at 0 and 30 min of every hour.<br>Note that chat has been disabled.</h3>
           <div id="lobby-games-table-container" class="hidden lobby-table-container">
             <table id="lobby-games-table" class="alt">
               <thead>
@@ -555,7 +496,7 @@
       <!-- The chat for the entire lobby -->
       <div id="lobby-chat-container" class="col-8">
         <section id="lobby-chat" class="box">
-          <h3 class="lobby-title">Lobby Chat</h3>
+          <h3 class="lobby-title">Lobby Chat [Disabled]</h3>
           <div id="lobby-chat-text" class="lobby-chat-text-box"></div>
           <input id="lobby-chat-input" type="text" placeholder="Chat" autocomplete="off" />
         </section>

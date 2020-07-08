@@ -31,11 +31,11 @@ func commandTableStart(s *Session, d *CommandData) {
 		t = v
 	}
 
-	// Validate that this is the owner of the table
-	if s.UserID() != t.Owner {
-		s.Warning("Only the owner of a table can start the game.")
-		return
-	}
+	// // Validate that this is the owner of the table
+	// if s.UserID() != t.Owner {
+	// 	s.Warning("Only the owner of a table can start the game.")
+	// 	return
+	// }
 
 	// Validate that the table has at least 2 players
 	if len(t.Players) < 2 {

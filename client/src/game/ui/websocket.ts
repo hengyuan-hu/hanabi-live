@@ -103,23 +103,23 @@ commands.set('gameOver', () => {
   globals.sharedReplayTurn = globals.replayTurn + 1;
   // (we add one to account for the text that the server sends at the end of a game)
 
-  // Open the replay UI if we were not in an in-game replay when the game ended
-  if (!globals.inReplay) {
-    replay.enter();
-  }
+  // // Open the replay UI if we were not in an in-game replay when the game ended
+  // if (!globals.inReplay) {
+  //   replay.enter();
+  // }
 
-  // Turn off the flag that tracks when the game is over
-  // (before the "gameOver" command is receieved)
-  // (this must be after the "replay.enter()" function)
-  globals.gameOver = false;
+  // // Turn off the flag that tracks when the game is over
+  // // (before the "gameOver" command is receieved)
+  // // (this must be after the "replay.enter()" function)
+  // globals.gameOver = false;
 
-  // If the user is in an in-game replay when the game ends, we need to jerk them away from it
-  // and go to the end of the game. This is because we need to process all of the queued "action"
-  // messages (otherwise, the code will try to "reveal" cards that might be undefined)
+  // // If the user is in an in-game replay when the game ends, we need to jerk them away from it
+  // // and go to the end of the game. This is because we need to process all of the queued "action"
+  // // messages (otherwise, the code will try to "reveal" cards that might be undefined)
 
-  // The final turn displays how long everyone took,
-  // so we want to go to the turn before that, which we recorded earlier
-  replay.goto(globals.finalReplayTurn, true);
+  // // The final turn displays how long everyone took,
+  // // so we want to go to the turn before that, which we recorded earlier
+  // replay.goto(globals.finalReplayTurn, true);
 
   // Hide the "Exit Replay" button in the center of the screen, since it is no longer necessary
   globals.elements.replayExitButton!.hide();
@@ -133,7 +133,7 @@ commands.set('gameOver', () => {
   // Re-draw the deck tooltip
   // (it will show more information when you are in a replay)
   globals.datetimeFinished = new Date();
-  globals.elements.deck!.initTooltip();
+  // globals.elements.deck!.initTooltip();
 
   // Turn off the "Throw It in a Hole" UI
   if (globals.variant.name.startsWith('Throw It in a Hole')) {
@@ -553,15 +553,15 @@ commands.set('replayLeader', (data: ReplayLeaderData) => {
   globals.sharedReplayLeader = data.name;
   globals.amSharedReplayLeader = globals.sharedReplayLeader === globals.lobby.username;
 
-  // Update the UI and play an animation to indicate there is a new replay leader
-  globals.elements.sharedReplayLeaderLabel!.show();
+  // // Update the UI and play an animation to indicate there is a new replay leader
+  // globals.elements.sharedReplayLeaderLabel!.show();
   // (the crown might be invisible if we just finished an ongoing game)
-  globals.elements.sharedReplayLeaderCircle!.visible(globals.amSharedReplayLeader);
+  // globals.elements.sharedReplayLeaderCircle!.visible(globals.amSharedReplayLeader);
   if (data.playAnimation) {
     // We only want the animation to play when the leader changes
     // The server will set "playAnimation" to false when a player is first loading into a game
     // (or when a game ends)
-    globals.elements.sharedReplayLeaderLabelPulse!.play();
+    // globals.elements.sharedReplayLeaderLabelPulse!.play();
   }
 
   // Arrange the center buttons in a certain way depending on
@@ -578,8 +578,8 @@ commands.set('replayLeader', (data: ReplayLeaderData) => {
   globals.elements.enterHypoButton!.visible(globals.amSharedReplayLeader);
   globals.elements.enterHypoButton!.setEnabled(globals.currentPlayerIndex !== -1);
 
-  // Enable/disable the restart button
-  globals.elements.restartButton!.visible(globals.amSharedReplayLeader);
+  // // Enable/disable the restart button
+  // globals.elements.restartButton!.visible(globals.amSharedReplayLeader);
 
   // Hide the replay area if we are in a hypothetical
   if (globals.hypothetical) {
@@ -588,13 +588,13 @@ commands.set('replayLeader', (data: ReplayLeaderData) => {
 
   globals.layers.UI.batchDraw();
 
-  // Update the tooltip
-  let content = `<strong>Leader:</strong> ${globals.sharedReplayLeader}`;
-  if (!globals.spectators.includes(globals.sharedReplayLeader)) {
-    // Check to see if the leader is away
-    content += ' (away)';
-  }
-  $('#tooltip-leader').tooltipster('instance').content(content);
+  // // Update the tooltip
+  // let content = `<strong>Leader:</strong> ${globals.sharedReplayLeader}`;
+  // if (!globals.spectators.includes(globals.sharedReplayLeader)) {
+  //   // Check to see if the leader is away
+  //   content += ' (away)';
+  // }
+  // $('#tooltip-leader').tooltipster('instance').content(content);
 });
 
 // This is used in shared replays to make fun sounds
@@ -708,8 +708,8 @@ commands.set('spectators', (data: SpectatorsData) => {
   globals.spectators = data.names;
 
   const visible = data.names.length > 0;
-  globals.elements.spectatorsLabel.visible(visible);
-  globals.elements.spectatorsNumLabel.visible(visible);
+  // globals.elements.spectatorsLabel.visible(visible);
+  // globals.elements.spectatorsNumLabel.visible(visible);
   if (visible) {
     globals.elements.spectatorsNumLabel.text(data.names.length.toString());
 
@@ -736,15 +736,15 @@ commands.set('spectators', (data: SpectatorsData) => {
     $('#tooltip-spectators').tooltipster('close');
   }
 
-  // We might also need to update the content of replay leader icon
-  if (globals.sharedReplay) {
-    let content = `<strong>Leader:</strong> ${globals.sharedReplayLeader}`;
-    if (!globals.spectators.includes(globals.sharedReplayLeader)) {
-      // Check to see if the leader is away
-      content += ' (away)';
-    }
-    $('#tooltip-leader').tooltipster('instance').content(content);
-  }
+  // // We might also need to update the content of replay leader icon
+  // if (globals.sharedReplay) {
+  //   let content = `<strong>Leader:</strong> ${globals.sharedReplayLeader}`;
+  //   if (!globals.spectators.includes(globals.sharedReplayLeader)) {
+  //     // Check to see if the leader is away
+  //     content += ' (away)';
+  //   }
+  //   $('#tooltip-leader').tooltipster('instance').content(content);
+  // }
 
   globals.layers.UI.batchDraw();
 });

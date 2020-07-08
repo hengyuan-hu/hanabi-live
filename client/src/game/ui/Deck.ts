@@ -52,7 +52,7 @@ export default class Deck extends Konva.Group {
       arrows.click(event, ReplayArrowOrder.Deck, this);
     });
 
-    this.initTooltip();
+    // this.initTooltip();
   }
 
   doLayout() {
@@ -248,6 +248,6 @@ export default class Deck extends Konva.Group {
     $('#tooltip-deck').tooltipster('instance').content(content);
 
     // Store the content so it can be accessed by the faded rectangle tooltip
-    this.tooltipContent = content;
+    // this.tooltipContent = content;
   }
 }

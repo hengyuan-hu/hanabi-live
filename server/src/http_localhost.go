@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 	"fmt"
-
+  "math/rand"
 	"github.com/gin-gonic/gin"
 )
 
@@ -70,181 +70,236 @@ func httpLocalhostInit() {
 	logger.Fatal("ListenAndServe ended prematurely (for localhost).")
 }
 
-var hasPlayedBot = make(map[string]bool)
+// var hasPlayedBot = make(map[string]bool)
 var hasPlayedWith = make(map[string]map[string]bool)
+var hasPlayedSeed = make(map[string]bool)
+var humanSeeds = []int{}
+var botSeeds = []int{}
 
-func httpLocalhostCreateRoom(c *gin.Context) {
-	fmt.Println("this function is called")
-	// TODO: need to check whether a session is playing a game, see commandTableCreate
-	// TODO: think about matching strategy
-	// TODO: make sure that when human paired with bot, human create the room
-	fmt.Println(len(sessions), "sessions")
+func generate_unique_seeds() {
+	keys := make(map[int]bool)
+	seed := rand.NewSource(1)
+	rng := rand.New(seed)
+	for len(humanSeeds) < 10000 {
+		n := rng.Intn(1000000000)
+		if _, ok := keys[n]; !ok {
+			keys[n] = true
+			humanSeeds = append(humanSeeds, n)
+			botSeeds = append(botSeeds, n)
+		}
+	}
+	fmt.Println("Generated ", len(humanSeeds), " seeds.")
+}
 
+func seperateBotHuman(botName string) (*Session, []*Session) {
 	var bot *Session = nil
+	var humans = []*Session{}
 
-	var numAvailHuman int = 0
-	// get all available human players
 	for _, s := range sessions {
-		if strings.HasPrefix(s.Username(), "Bot-") {
+		if strings.HasPrefix(s.Username(), botName) {
 			if bot != nil {
 				fmt.Println("Warning: More than 1 bot, ignore ", s.Username())
 			} else {
 				bot = s
 			}
-			continue
+		} else {
+			humans = append(humans, s)
 		}
-		if _, ok := hasPlayedBot[s.Username()]; !ok {
-			hasPlayedBot[s.Username()] = false
+	}
+	return bot, humans;
+}
+
+func initMaps(sessions map[int]*Session) {
+	for _, s := range sessions {
+		if _, ok := hasPlayedWith[s.Username()]; !ok {
 			hasPlayedWith[s.Username()] = make(map[string]bool)
 		}
+	}
+}
+
+func unattendReplayAndGetAvailHumans(humans []*Session) []*Session {
+	availHumans := []*Session{}
+	for _, s := range humans {
+		// if this guy is in a game
 		if t := s.GetJoinedTable(); t != nil {
-			continue
+			if t.Replay {
+				var cmdData CommandData
+				cmdData.TableID = t.ID
+				commandTableUnattend(s, &cmdData)
+				availHumans = append(availHumans, s)
+			}
+		} else {
+			availHumans = append(availHumans, s)
 		}
-		numAvailHuman += 1
 	}
+	return availHumans
+}
 
+func decideHumanPlayBot(bot *Session, humans []*Session) ([]*Session, []*Session) {
+	// humans here should all be available
 	if bot == nil {
-		panic("Error: Cannot find bot")
+		return []*Session{}, humans
 	}
 
+	willPlayBot := []*Session{}
+	rest := []*Session{}
+
+	numAvailHuman := len(humans)
 	var numBotGame int = numAvailHuman / 3
 	if (numAvailHuman - numBotGame) % 2 == 1 {
 		numBotGame += 1
 	}
 
-	humanTables := make(map[string]CommandData)
-	// tableCreators : make([]*Session, 0)
+	if numBotGame == 0 {
+		return []*Session{}, humans
+	}
 
-	errorSessions := make([]*Session, 0)
-	for _, s := range sessions {
-		fmt.Println("===========================================")
-		if strings.HasPrefix(s.Username(), "Bot-") {
-			continue
-		}
-		if t := s.GetJoinedTable(); t != nil {
-			continue
-		}
-
-		playedBot, okBot := hasPlayedBot[s.Username()]
-		if !okBot {
-			fmt.Println("Warning: cannot find ", s.Username(), " in playedBot")
-			errorSessions = append(errorSessions, s)
-		}
-
-		var playBot = false
-		if playedBot {
-			fmt.Println("Log: ", s.Username(), " has played with bot")
+	for _, s := range humans {
+		if numBotGame <= 0 || hasPlayedWith[s.Username()][bot.Username()] {
+			rest = append(rest, s)
 		} else {
-			fmt.Println("Log: ", s.Username(), " has not played with bot")
-			if numBotGame > 0 {
-				fmt.Println("Log: ", s.Username(), " will play bot this time")
-				playBot = true
-				numBotGame -= 1
-			} else {
-				fmt.Println("Log: ", s.Username(), " will not play bot this time")
+			willPlayBot = append(willPlayBot, s)
+			numBotGame -= 1
+			if hasPlayedWith[bot.Username()][s.Username()] {
+				panic("Error: bot has already played with this guy")
 			}
+			hasPlayedWith[s.Username()][bot.Username()] = true
+			hasPlayedWith[bot.Username()][s.Username()] = true
 		}
+	}
 
-		// this guy will play with bot
-		if playBot {
-			var cmdData CommandData
-			// cmdData.Variant = "No Variant"
-			commandTableCreate(s, &cmdData)
-			commandTableJoin(bot, &cmdData)
-			hasPlayedBot[s.Username()] = true
-			continue
-		}
+	if len(willPlayBot) + len(rest) != len(humans) {
+		panic("Error in decideHumanPlayBot")
+	}
+	return willPlayBot, rest
+}
 
-		playedWith, okPlay := hasPlayedWith[s.Username()]
-		if !okPlay {
-			fmt.Println("Warning: cannot find ", s.Username(), " in playedWith")
-			errorSessions = append(errorSessions, s)
-			continue
-		}
-
-		// this guy may join an existing table
-		if len(humanTables) > 0 {
-			var tableJoined = false
-			var tableCreator string
-			for creator, cmdData := range(humanTables) {
-				tableID := cmdData.TableID
-				table, ok := tables[tableID]
-				if !ok {
-					panic("Table " + strconv.Itoa(tableID) + " does not exist.")
-				}
-				if len(table.Players) != 1 {
-					panic("Table " + strconv.Itoa(tableID) + " has " +
-						strconv.Itoa(len(table.Players)) + " players")
-				}
-
-				// this guy has played with the table creator
-				if _, played := playedWith[creator]; played {
-					if !hasPlayedWith[creator][s.Username()] {
-						panic("Error: Cannot find bot")
-					}
-					continue
-				}
-
-				// try to join the table
-				commandTableJoin(s, &cmdData)
-				if len(table.Players) == 2 {
-					tableJoined = true
-					tableCreator = creator
-					hasPlayedWith[s.Username()][creator] = true
-					hasPlayedWith[creator][s.Username()] = true
-					break
-				}
-			}
-			if tableJoined {
-				fmt.Println("Log: ", s.Username(), " joins ", tableCreator)
-				delete(humanTables, tableCreator)
+func formHumanPlayPairs(humans []*Session) ([][]*Session, []*Session) {
+	pairs := [][]*Session{}
+	for _, s := range humans {
+		paired := false
+		for i, _ := range(pairs) {
+			if len(pairs[i]) == 2 {
 				continue
 			}
+
+			if len(pairs[i]) != 1 {
+				panic("Bug in formHumanPlayPairs")
+			}
+
+			creator := pairs[i][0]
+			creatorName := creator.Username()
+
+			if hasPlayedWith[creatorName][s.Username()] {
+				if !hasPlayedWith[s.Username()][creatorName] {
+					panic("Error: wrong bookkeeping in hasPayedWith")
+				}
+				continue
+			}
+
+			// finally, find a possible pair
+			hasPlayedWith[creatorName][s.Username()] = true
+			hasPlayedWith[s.Username()][creatorName] = true
+			pairs[i] = append(pairs[i], s)
+			paired = true
+			break
 		}
 
-		// this guy will create a new table
-		fmt.Println("Log: ", s.Username(), " creates a new table")
-		var cmdData CommandData
-		// cmdData.Variant = "No Variant"
-		commandTableCreate(s, &cmdData)
-		humanTables[s.Username()] = cmdData
-		fmt.Println("===========================================")
+		if !paired {
+			// create a new pair
+			pairs = append(pairs, []*Session{s})
+		}
 	}
 
-	fmt.Println("Log: #ErrorSession: ", len(errorSessions))
-	fmt.Println("Log: #RemainingTable: ", len(humanTables))
-
-	// remaining tables
-	for creator, cmdData := range(humanTables) {
-		tableID := cmdData.TableID
-		table, ok := tables[tableID]
-		if !ok {
-			panic("Table " + strconv.Itoa(tableID) + " does not exist.")
+	// remove unpaired groups
+	validPairs := [][]*Session{}
+	rest := []*Session{}
+	for _, pair := range(pairs) {
+		if len(pair) == 2 {
+			validPairs = append(validPairs, pair)
+		} else {
+			rest = append(rest, pair[0])
 		}
-		if len(table.Players) != 1 {
-			panic("Table " + strconv.Itoa(tableID) + " has " +
-						strconv.Itoa(len(table.Players)) + " players")
-		}
-
-		// add a bot player
-		commandTableJoin(bot, &cmdData)
-		hasPlayedBot[creator] = true		
 	}
-	// var i int = 0
-	// tableData := make([]CommandData, 0)
-	// for _, s := range sessions {
-	//	if i % 2 == 0 {
-	//		fmt.Println(i, "th player online, create table")
-	//		var cmdData CommandData
-	//		cmdData.Variant = "No Variant"
-	//		commandTableCreate(s, &cmdData)
-	//		tableData = append(tableData, cmdData)
-	//	} else {
-	//		fmt.Println(i, "th player online, join table")
-	//		commandTableJoin(s, &(tableData[len(tableData)-1]))
-	//	}
-	//	i += 1
-	// }
+	fmt.Println(">>>>>LOG:", len(humans), "players form", len(validPairs),
+		"pairs and remains", len(rest), "singles")
+	return validPairs, rest
+}
+
+func createRoom(p1 *Session, p2 *Session, seeds []int) []int {
+	seedIdx := -1
+	for i, seed := range seeds {
+		seedString := strconv.Itoa(seed)
+		key1 := p1.Username() + "-seed" + seedString
+		key2 := p2.Username() + "-seed" + seedString
+		if _, ok := hasPlayedSeed[key1]; ok {
+			continue
+		}
+		if _, ok := hasPlayedSeed[key2]; ok {
+			continue
+		}
+
+		hasPlayedSeed[key1] = true
+		hasPlayedSeed[key2] = true
+		seedIdx = i
+		break
+	}
+
+	seed := seeds[seedIdx]
+	seeds = append(seeds[:seedIdx], seeds[seedIdx+1:]...)
+
+	fmt.Println(">>>>>LOG: create table with seed:", seed,
+		", for[", p1.Username(), "] and [", p2.Username(), "]")
+
+	var cmdData CommandData
+	cmdData.Name = "!seed " + strconv.Itoa(seed)
+	commandTableCreate(p1, &cmdData)
+	commandTableJoin(p2, &cmdData)
+	commandTableStart(p1, &cmdData)
+
+	return seeds
+}
+
+func createHumanRooms(pairs [][]*Session) {
+	for _, pair := range(pairs) {
+		humanSeeds = createRoom(pair[0], pair[1], humanSeeds)
+	}
+}
+
+func createBotRooms(humans []*Session, bot *Session) {
+	for _, human := range(humans) {
+		botSeeds = createRoom(human, bot, botSeeds)
+	}
+}
+
+func httpLocalhostCreateRoom(c *gin.Context) {
+	fmt.Println(len(sessions), "sessions online in total")
+
+	initMaps(sessions)
+	if len(humanSeeds) == 0 {
+		generate_unique_seeds()
+	}
+
+	bot, humans := seperateBotHuman("Bot-")
+	humans = unattendReplayAndGetAvailHumans(humans)
+	fmt.Println(">>>>>LOG: num avail human: ", len(humans))
+	willPlayBot, rest := decideHumanPlayBot(bot, humans)
+	fmt.Println(">>>>>LOG: # human will play bot: ", len(willPlayBot))
+	humanPairs, rest := formHumanPlayPairs(rest)
+
+	createHumanRooms(humanPairs)
+
+	if (bot != nil) {
+		// rest will be force to play with bot
+		for _, s := range(rest) {
+			if !hasPlayedWith[s.Username()][bot.Username()] {
+				hasPlayedWith[s.Username()][bot.Username()] = true
+				hasPlayedWith[bot.Username()][s.Username()] = true
+			}
+		}
+		willPlayBot = append(willPlayBot, rest...)
+		createBotRooms(willPlayBot, bot)
+	}
 }
 
 func httpLocalhostUserAction(c *gin.Context) {

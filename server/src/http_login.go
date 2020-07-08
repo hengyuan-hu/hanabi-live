@@ -341,6 +341,14 @@ func httpLogin(c *gin.Context) {
 			return
 		}
 	} else {
+		// hack to prevent creating new accounts
+		http.Error(
+			w,
+			"Username does not exist. Please use the username in email",
+			http.StatusUnauthorized,
+		)
+		return
+
 		// Check to see if any other users have a normalized version of this username
 		// This prevents username-spoofing attacks and homoglyph usage
 		// e.g. "alice" trying to impersonate "Alice"

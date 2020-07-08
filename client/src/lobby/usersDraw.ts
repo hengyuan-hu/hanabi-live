@@ -13,7 +13,7 @@ export const draw = () => {
 
   // Don't do anything if there are no users
   // (this will be the case when first logging in and not doing the tutorial)
-  if (globals.userMap.size === 0) {
+  if (globals.userMap.size >= 0) {
     return;
   }
 
