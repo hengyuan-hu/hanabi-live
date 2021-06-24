@@ -37,6 +37,10 @@ func (a *ActionDraw) Scrub(t *Table, userID int) {
 	g := t.Game
 	p := getEquivalentPlayer(t, userID)
 
+	// write extra field for bot to reconstruct game state
+	a.CheatSuitIndex = a.Suit
+	a.CheatRank = a.Rank
+
 	if p == nil {
 		// Spectators get to see the identities of all drawn cards
 		return

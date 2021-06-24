@@ -33,11 +33,13 @@ type ActionDiscard struct {
 }
 
 type ActionDraw struct {
-	Type        string `json:"type"`
-	PlayerIndex int    `json:"playerIndex"`
-	Order       int    `json:"order"` // The ID of the card, based on its ordering in the deck
-	SuitIndex   int    `json:"suitIndex"`
-	Rank        int    `json:"rank"`
+	Type           string `json:"type"`
+	PlayerIndex    int    `json:"playerIndex"`
+	Order          int    `json:"order"` // The ID of the card, based on its ordering in the deck
+	SuitIndex      int    `json:"suitIndex"`
+	Rank           int    `json:"rank"`
+	CheatSuitIndex int    `json:"cheatSuitIndex"`
+	CheatRank      int    `json:"cheatRank"`
 }
 
 type ActionGameOver struct {
